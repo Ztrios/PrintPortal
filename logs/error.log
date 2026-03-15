@@ -1,0 +1,1 @@
+{"level":"error","message":"Print error job 88977b8e-1381-4510-bbef-bd3d08f82d69: Command failed: powershell -Command \"Start-Process -FilePath '/Users/angelinashoily/Downloads/printportal2/uploads/7fd018d1-8d29-4c9e-8c94-bbc8846f8543.pdf' -Verb Print -Wait\"\n/bin/sh: powershell: command not found\n","timestamp":"2026-03-15T08:38:33.270Z"}

@@ -1,0 +1,16 @@
+{
+  "port": 3000,
+  "printerName": "",
+  "sessionSecret": "CHANGE_THIS_TO_A_LONG_RANDOM_STRING_AT_LEAST_64_CHARS",
+  "sessionTTL": 3600,
+  "maxFileSizeMB": 50,
+  "allowedMimeTypes": [
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "image/png",
+    "image/jpeg",
+    "image/jpg",
+    "text/plain"
+  ]
+}

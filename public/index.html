@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PrintPortal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0a0c10; --surface: #111318; --surface2: #191c24; --border: #252830;
+    --accent: #e8ff47; --accent2: #47b8ff; --danger: #ff4747; --success: #47ff9a;
+    --warning: #ffb347; --text: #e8eaf0; --muted: #6b7080;
+    --font-head: 'Syne', sans-serif; --font-mono: 'DM Mono', monospace;
+  }
+  body { background: var(--bg); color: var(--text); font-family: var(--font-mono); min-height: 100vh; }
+
+  /* LOGIN */
+  #login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+  .login-bg { position: absolute; inset: 0; background: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(232,255,71,.12) 0%, transparent 60%), radial-gradient(ellipse 60% 50% at 80% 110%, rgba(71,184,255,.08) 0%, transparent 60%); }
+  .login-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(232,255,71,.03) 1px, transparent 1px), linear-gradient(90deg, rgba(232,255,71,.03) 1px, transparent 1px); background-size: 40px 40px; }
+  .login-card { position: relative; width: 420px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 48px 40px; box-shadow: 0 32px 80px rgba(0,0,0,.6); animation: fadeUp .5s ease; }
+  .login-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 36px; }
+  .login-logo .icon { width: 44px; height: 44px; background: var(--accent); border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+  .login-logo .icon svg { width: 24px; height: 24px; color: #0a0c10; }
+  .login-logo h1 { font-family: var(--font-head); font-size: 22px; font-weight: 800; }
+  .login-logo span { color: var(--accent); }
+  .login-subtitle { color: var(--muted); font-size: 13px; margin-bottom: 32px; }
+  .field { margin-bottom: 20px; }
+  .field label { display: block; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  .field input, .field select { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; color: var(--text); font-family: var(--font-mono); font-size: 14px; outline: none; transition: border-color .2s; }
+  .field input:focus, .field select:focus { border-color: var(--accent); }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-family: var(--font-mono); font-size: 14px; font-weight: 500; transition: all .15s; }
+  .btn-primary { background: var(--accent); color: #0a0c10; }
+  .btn-primary:hover { background: #d4ea2a; transform: translateY(-1px); }
+  .btn-danger { background: rgba(255,71,71,.15); color: var(--danger); border: 1px solid rgba(255,71,71,.3); }
+  .btn-danger:hover { background: rgba(255,71,71,.25); }
+  .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+  .btn-ghost:hover { border-color: var(--text); color: var(--text); }
+  .btn-sm { padding: 7px 14px; font-size: 12px; }
+  .btn-full { width: 100%; }
+  .btn:disabled { opacity: .4; cursor: not-allowed; transform: none !important; }
+  .error-msg { color: var(--danger); font-size: 13px; margin-top: 12px; display: none; padding: 10px; background: rgba(255,71,71,.1); border-radius: 6px; border: 1px solid rgba(255,71,71,.2); }
+  .error-msg.show { display: block; }
+
+  /* APP */
+  #app { display: none; min-height: 100vh; }
+  .sidebar { position: fixed; top: 0; left: 0; bottom: 0; width: 240px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 24px 0; z-index: 100; }
+  .sidebar-logo { display: flex; align-items: center; gap: 10px; padding: 0 20px 24px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+  .sidebar-logo .icon { width: 32px; height: 32px; background: var(--accent); border-radius: 7px; display: flex; align-items: center; justify-content: center; }
+  .sidebar-logo .icon svg { width: 18px; height: 18px; color: #0a0c10; }
+  .sidebar-logo span { font-family: var(--font-head); font-weight: 800; font-size: 16px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 20px; cursor: pointer; font-size: 13px; color: var(--muted); transition: all .15s; border-left: 3px solid transparent; }
+  .nav-item:hover { color: var(--text); background: var(--surface2); }
+  .nav-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(232,255,71,.05); }
+  .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .sidebar-user { margin-top: auto; padding: 16px 20px; border-top: 1px solid var(--border); }
+  .sidebar-user .name { font-size: 13px; font-weight: 500; }
+  .sidebar-user .role { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 12px; }
+  .main { margin-left: 240px; min-height: 100vh; padding: 32px 40px; }
+  .page { display: none; animation: fadeIn .3s ease; }
+  .page.active { display: block; }
+  .page-header { margin-bottom: 32px; display: flex; align-items: center; gap: 16px; }
+  .page-header-text h2 { font-family: var(--font-head); font-size: 28px; font-weight: 800; }
+  .page-header-text p { color: var(--muted); font-size: 13px; margin-top: 6px; }
+  .sep { flex: 1; }
+
+  /* UPLOAD */
+  .upload-zone { border: 2px dashed var(--border); border-radius: 16px; padding: 48px; text-align: center; cursor: pointer; transition: all .2s; margin-bottom: 24px; position: relative; }
+  .upload-zone:hover, .upload-zone.dragover { border-color: var(--accent); background: rgba(232,255,71,.04); }
+  .upload-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .upload-zone .uz-icon { font-size: 48px; margin-bottom: 16px; }
+  .upload-zone h3 { font-family: var(--font-head); font-size: 18px; margin-bottom: 8px; }
+  .upload-zone p { color: var(--muted); font-size: 13px; }
+  .file-types { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 16px; }
+  .badge { background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 3px 8px; font-size: 11px; color: var(--muted); }
+  .selected-file { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+  .selected-file .file-icon { font-size: 24px; }
+  .selected-file .file-info { flex: 1; }
+  .selected-file .file-name { font-size: 14px; font-weight: 500; }
+  .selected-file .file-size { font-size: 12px; color: var(--muted); }
+  .selected-file.hidden { display: none; }
+  .print-options { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 24px; }
+  .print-options h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 20px; }
+  .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .progress-bar { width: 100%; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; margin-top: 16px; display: none; }
+  .progress-bar .fill { height: 100%; background: var(--accent); width: 0; transition: width .3s; }
+
+  /* TABLE */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; }
+  .jobs-table { width: 100%; border-collapse: collapse; }
+  .jobs-table th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); padding: 10px 16px; border-bottom: 1px solid var(--border); }
+  .jobs-table td { padding: 14px 16px; border-bottom: 1px solid rgba(37,40,48,.5); font-size: 13px; vertical-align: middle; }
+  .status-badge { display: inline-block; padding: 3px 10px; border-radius: 100px; font-size: 11px; font-weight: 500; }
+  .status-pending { background: rgba(255,179,71,.15); color: var(--warning); }
+  .status-printing { background: rgba(71,184,255,.15); color: var(--accent2); }
+  .status-done { background: rgba(71,255,154,.15); color: var(--success); }
+  .status-failed { background: rgba(255,71,71,.15); color: var(--danger); }
+  .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px; }
+  .stat-card .val { font-family: var(--font-head); font-size: 36px; font-weight: 800; }
+  .stat-card .lbl { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .stat-card.accent-card { border-color: rgba(232,255,71,.3); background: rgba(232,255,71,.05); }
+  .stat-card.accent-card .val { color: var(--accent); }
+
+  /* MODAL */
+  .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 200; display: none; align-items: center; justify-content: center; }
+  .modal-backdrop.open { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 32px; width: 440px; max-width: 95vw; animation: fadeUp .2s ease; }
+  .modal h3 { font-family: var(--font-head); font-size: 20px; font-weight: 700; margin-bottom: 24px; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 14px 20px; font-size: 13px; z-index: 999; opacity: 0; transform: translateY(10px); transition: all .3s; max-width: 320px; pointer-events: none; }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast.success { border-color: rgba(71,255,154,.4); color: var(--success); }
+  .toast.error { border-color: rgba(255,71,71,.4); color: var(--danger); }
+
+  .flex { display: flex; } .gap-2 { gap: 8px; } .items-center { align-items: center; }
+  .text-muted { color: var(--muted); } .text-sm { font-size: 12px; } .mt-4 { margin-top: 16px; }
+  .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(0,0,0,.3); border-top-color: #0a0c10; border-radius: 50%; animation: spin .7s linear infinite; }
+  .empty-state { text-align: center; padding: 60px 0; color: var(--muted); }
+  .empty-state .icon { font-size: 48px; margin-bottom: 16px; }
+  .tag-admin { background: rgba(232,255,71,.15); color: var(--accent); padding: 2px 8px; border-radius: 4px; font-size: 11px; }
+  .tag-user { background: rgba(71,184,255,.1); color: var(--accent2); padding: 2px 8px; border-radius: 4px; font-size: 11px; }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 768px) {
+    .sidebar { transform: translateX(-100%); transition: transform .3s; }
+    .sidebar.open { transform: translateX(0); }
+    .main { margin-left: 0; padding: 16px; }
+    .options-grid { grid-template-columns: 1fr; }
+    .stats-grid { grid-template-columns: 1fr; }
+    .mobile-menu-btn { display: flex; position: fixed; top: 16px; left: 16px; z-index: 150; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px; cursor: pointer; }
+    .page-header { margin-top: 48px; }
+  }
+  @media (min-width: 769px) { .mobile-menu-btn { display: none; } }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-bg"></div>
+  <div class="login-grid"></div>
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg>
+      </div>
+      <h1>Print<span>Portal</span></h1>
+    </div>
+    <p class="login-subtitle">Secure organizational print management</p>
+    <div class="field">
+      <label>Username</label>
+      <input type="text" id="login-user" autocomplete="username" placeholder="Enter username">
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="login-pass" autocomplete="current-password" placeholder="Enter password">
+    </div>
+    <div class="error-msg" id="login-error"></div>
+    <div class="mt-4">
+      <button class="btn btn-primary btn-full" id="login-btn">Sign In</button>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <button class="mobile-menu-btn" id="mobile-menu-btn">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg>
+      </div>
+      <span>PrintPortal</span>
+    </div>
+    <div class="nav-item active" data-page="upload">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Upload & Print
+    </div>
+    <div class="nav-item" data-page="queue">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      Print History
+    </div>
+    <div class="nav-item admin-only" data-page="users" style="display:none">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Manage Users
+    </div>
+    <div class="nav-item admin-only" data-page="logs" style="display:none">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      System Logs
+    </div>
+    <div class="sidebar-user">
+      <div class="name" id="user-name">—</div>
+      <div class="role" id="user-role">—</div>
+      <button class="btn btn-ghost btn-sm btn-full" id="logout-btn">Sign Out</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <!-- Upload -->
+    <div class="page active" id="page-upload">
+      <div class="page-header">
+        <div class="page-header-text"><h2>Upload & Print</h2><p>Upload your document and submit a print job</p></div>
+      </div>
+      <div class="upload-zone" id="upload-zone">
+        <input type="file" id="file-input" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.txt">
+        <div class="uz-icon">🖨️</div>
+        <h3>Drop your file here</h3>
+        <p>or click to browse</p>
+        <div class="file-types">
+          <span class="badge">PDF</span><span class="badge">DOC</span><span class="badge">DOCX</span>
+          <span class="badge">PNG</span><span class="badge">JPG</span><span class="badge">TXT</span>
+        </div>
+      </div>
+      <div class="selected-file hidden" id="selected-file-info">
+        <div class="file-icon" id="sf-icon">📄</div>
+        <div class="file-info">
+          <div class="file-name" id="sf-name"></div>
+          <div class="file-size" id="sf-size"></div>
+        </div>
+        <button class="btn btn-ghost btn-sm" id="clear-file-btn">✕ Remove</button>
+      </div>
+      <div class="print-options">
+        <h3>Print Options</h3>
+        <div class="options-grid">
+          <div class="field"><label>Copies</label><input type="number" id="opt-copies" value="1" min="1" max="50"></div>
+          <div class="field"><label>Color Mode</label>
+            <select id="opt-color"><option value="mono">Black & White</option><option value="color">Color</option></select>
+          </div>
+          <div class="field"><label>Orientation</label>
+            <select id="opt-orientation"><option value="portrait">Portrait</option><option value="landscape">Landscape</option></select>
+          </div>
+          <div class="field"><label>Paper Size</label>
+            <select id="opt-paper"><option value="A4">A4</option><option value="A3">A3</option><option value="Letter">Letter</option><option value="Legal">Legal</option></select>
+          </div>
+        </div>
+        <div class="field"><label>Notes (optional)</label><input type="text" id="opt-notes" placeholder="Special instructions..." maxlength="200"></div>
+      </div>
+      <div class="progress-bar" id="upload-progress"><div class="fill" id="progress-fill"></div></div>
+      <button class="btn btn-primary" id="submit-btn" disabled>Submit Print Job</button>
+    </div>
+
+    <!-- History (Audit Log) -->
+    <div class="page" id="page-queue">
+      <div class="page-header">
+        <div class="page-header-text"><h2>Print History & Audit Log</h2><p>View all activity and who printed what</p></div>
+        <div class="sep"></div>
+        <button class="btn btn-ghost btn-sm" id="refresh-queue-btn">↺ Refresh</button>
+      </div>
+      <div class="stats-grid" id="queue-stats"></div>
+      <div class="card" id="queue-content"><div class="empty-state"><p>Loading…</p></div></div>
+    </div>
+
+    <!-- Users -->
+    <div class="page" id="page-users">
+      <div class="page-header">
+        <div class="page-header-text"><h2>Users</h2><p>Manage accounts</p></div>
+        <div class="sep"></div>
+        <button class="btn btn-primary btn-sm" id="add-user-btn">+ Add User</button>
+      </div>
+      <div class="card" id="users-content"><div class="empty-state"><p>Loading…</p></div></div>
+    </div>
+
+    <!-- Logs -->
+    <div class="page" id="page-logs">
+      <div class="page-header">
+        <div class="page-header-text"><h2>Audit Logs</h2><p>Recent activity</p></div>
+        <div class="sep"></div>
+        <button class="btn btn-ghost btn-sm" id="refresh-logs-btn">↺ Refresh</button>
+      </div>
+      <div class="card"><div id="logs-content" style="font-size:12px;line-height:1.8;max-height:70vh;overflow-y:auto;color:var(--muted)"></div></div>
+    </div>
+  </main>
+</div>
+
+<!-- Add User Modal -->
+<div class="modal-backdrop" id="modal-user">
+  <div class="modal">
+    <h3>Add User</h3>
+    <div class="field"><label>Username</label><input type="text" id="mu-username" placeholder="e.g. john.doe"></div>
+    <div class="field"><label>Full Name</label><input type="text" id="mu-name" placeholder="John Doe"></div>
+    <div class="field"><label>Password</label><input type="password" id="mu-password" placeholder="Min 8 characters"></div>
+    <div class="field"><label>Role</label><select id="mu-role"><option value="user">User</option><option value="admin">Admin</option></select></div>
+    <div class="error-msg" id="mu-error"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="modal-cancel-btn">Cancel</button>
+      <button class="btn btn-primary" id="modal-save-btn">Save User</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let currentUser = null;
+let selectedFile = null;
+
+// ── API helper ──
+async function api(url, method, body) {
+  method = method || 'GET';
+  const opts = { method: method, headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin' };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(url, opts);
+  const data = await r.json();
+  if (!r.ok) throw new Error(data.error || 'Request failed');
+  return data;
+}
+
+// ── Toast ──
+function toast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + (type || '') + ' show';
+  setTimeout(function() { t.classList.remove('show'); }, 3500);
+}
+
+// ── Auth ──
+async function doLogin() {
+  const btn = document.getElementById('login-btn');
+  const err = document.getElementById('login-error');
+  const username = document.getElementById('login-user').value.trim();
+  const password = document.getElementById('login-pass').value;
+
+  err.classList.remove('show');
+  if (!username || !password) {
+    err.textContent = 'Please enter your username and password.';
+    err.classList.add('show');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Signing in…';
+
+  try {
+    const r = await api('/api/login', 'POST', { username: username, password: password });
+    currentUser = r.user;
+    showApp();
+  } catch(e) {
+    err.textContent = e.message || 'Login failed. Check your credentials.';
+    err.classList.add('show');
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Sign In';
+}
+
+async function doLogout() {
+  try { await api('/api/logout', 'POST'); } catch(e) {}
+  currentUser = null;
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-pass').value = '';
+}
+
+async function checkSession() {
+  try {
+    const r = await api('/api/me');
+    if (r && r.user) { currentUser = r.user; showApp(); }
+  } catch(e) { /* not logged in */ }
+}
+
+function showApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('user-name').textContent = currentUser.name;
+  document.getElementById('user-role').textContent = currentUser.role === 'admin' ? '⚡ Administrator' : 'User';
+  if (currentUser.role === 'admin') {
+    document.querySelectorAll('.admin-only').forEach(function(el) { el.style.display = 'flex'; });
+  }
+  showPage('upload');
+}
+
+// ── Navigation ──
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+  document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
+  const page = document.getElementById('page-' + name);
+  if (page) page.classList.add('active');
+  const nav = document.querySelector('[data-page="' + name + '"]');
+  if (nav) nav.classList.add('active');
+  document.getElementById('sidebar').classList.remove('open');
+  if (name === 'queue') loadQueue();
+  if (name === 'users') loadUsers();
+  if (name === 'logs') loadLogs();
+}
+
+// ── File Upload ──
+function onFileSelected(file) {
+  if (!file) return;
+  selectedFile = file;
+  document.getElementById('sf-name').textContent = file.name;
+  document.getElementById('sf-size').textContent = formatSize(file.size);
+  document.getElementById('sf-icon').textContent = fileIcon(file.name);
+  document.getElementById('selected-file-info').classList.remove('hidden');
+  document.getElementById('submit-btn').disabled = false;
+}
+
+function clearFile() {
+  selectedFile = null;
+  document.getElementById('file-input').value = '';
+  document.getElementById('selected-file-info').classList.add('hidden');
+  document.getElementById('submit-btn').disabled = true;
+}
+
+async function submitJob() {
+  if (!selectedFile) return;
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Uploading…';
+  const bar = document.getElementById('upload-progress');
+  const fill = document.getElementById('progress-fill');
+  bar.style.display = 'block';
+  fill.style.width = '0%';
+
+  const fd = new FormData();
+  fd.append('file', selectedFile);
+  fd.append('copies', document.getElementById('opt-copies').value);
+  fd.append('colorMode', document.getElementById('opt-color').value);
+  fd.append('orientation', document.getElementById('opt-orientation').value);
+  fd.append('paperSize', document.getElementById('opt-paper').value);
+  fd.append('notes', document.getElementById('opt-notes').value);
+
+  try {
+    await new Promise(function(resolve, reject) {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', '/api/jobs');
+      xhr.withCredentials = true;
+      xhr.upload.onprogress = function(e) {
+        if (e.lengthComputable) fill.style.width = (e.loaded / e.total * 100) + '%';
+      };
+      xhr.onload = function() {
+        const r = JSON.parse(xhr.responseText);
+        if (xhr.status >= 200 && xhr.status < 300) resolve(r);
+        else reject(new Error(r.error || 'Upload failed'));
+      };
+      xhr.onerror = function() { reject(new Error('Network error')); };
+      xhr.send(fd);
+    });
+    toast('✓ Print job submitted!', 'success');
+    clearFile();
+    document.getElementById('opt-notes').value = '';
+    document.getElementById('opt-copies').value = 1;
+    showPage('queue'); // Switch to History page automatically
+  } catch(e) {
+    toast(e.message, 'error');
+  }
+  btn.disabled = false;
+  btn.textContent = 'Submit Print Job';
+  setTimeout(function() { bar.style.display = 'none'; fill.style.width = '0'; }, 1000);
+}
+
+async function loadQueue() {
+  const el = document.getElementById('queue-content');
+  const stats = document.getElementById('queue-stats');
+  el.innerHTML = '<div class="empty-state"><p>Loading…</p></div>';
+  try {
+    const data = await api('/api/jobs');
+    const jobs = data.jobs;
+    const pending = jobs.filter(function(j) { return j.status === 'pending'; }).length;
+    const done = jobs.filter(function(j) { return j.status === 'done'; }).length;
+    const failed = jobs.filter(function(j) { return j.status === 'failed'; }).length;
+    stats.innerHTML =
+      '<div class="stat-card accent-card"><div class="val">' + pending + '</div><div class="lbl">Pending</div></div>' +
+      '<div class="stat-card"><div class="val">' + done + '</div><div class="lbl">Completed</div></div>' +
+      '<div class="stat-card"><div class="val">' + failed + '</div><div class="lbl">Failed</div></div>';
+    el.innerHTML = jobsTable(jobs, true);
+  } catch(e) { el.innerHTML = '<p class="text-muted text-sm">' + esc(e.message) + '</p>'; }
+}
+
+function jobsTable(jobs, isAdmin) {
+  if (!jobs.length) return '<div class="empty-state"><div class="icon">📭</div><p>No print history yet</p></div>';
+  let html = '<table class="jobs-table"><thead><tr><th>File</th>' +
+    '<th>Owner</th>' +
+    '<th>Status</th><th>Submitted</th><th>Who Printed</th><th>Actions</th></tr></thead><tbody>';
+  jobs.forEach(function(j) {
+    html += '<tr><td><div style="font-weight:500">' + esc(j.originalName) + '</div><div class="text-muted text-sm">' + formatSize(j.size) + '</div></td>';
+    html += '<td><div>' + esc(j.name) + '</div><div class="text-muted text-sm">' + esc(j.username) + '</div></td>';
+    html += '<td><span class="status-badge status-' + j.status + '">' + j.status + '</span></td>';
+    html += '<td class="text-muted text-sm">' + new Date(j.createdAt).toLocaleString() + '</td>';
+    html += '<td>' + (j.printedBy ? '<div style="color:var(--accent)">' + esc(j.printedBy) + '</div><div class="text-muted text-sm">' + new Date(j.printedAt).toLocaleString() + '</div>' : '<span class="text-muted text-sm">—</span>') + '</td>';
+    html += '<td><div class="flex gap-2">';
+    if (isAdmin && j.status === 'pending') html += '<button class="btn btn-primary btn-sm" data-print-id="' + j.id + '">▶ Print</button>';
+    html += '<button class="btn btn-danger btn-sm" data-delete-id="' + j.id + '">✕</button>';
+    html += '</div></td></tr>';
+  });
+  html += '</tbody></table>';
+  return html;
+}
+
+async function printJob(id) {
+  if (!confirm('Send this job to the printer?')) return;
+  try {
+    await api('/api/jobs/' + id + '/print', 'POST');
+    toast('✓ Sent to printer', 'success');
+    loadQueue();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function deleteJob(id) {
+  if (!confirm('Cancel this print job?')) return;
+  try {
+    await api('/api/jobs/' + id, 'DELETE');
+    toast('Job cancelled', 'success');
+    loadQueue();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+// ── Users ──
+async function loadUsers() {
+  const el = document.getElementById('users-content');
+  el.innerHTML = '<div class="empty-state"><p>Loading…</p></div>';
+  try {
+    const data = await api('/api/users');
+    let html = '<table class="jobs-table"><thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+    data.users.forEach(function(u) {
+      html += '<tr><td>' + esc(u.name) + '</td><td class="text-muted text-sm">' + esc(u.username) + '</td>';
+      html += '<td><span class="' + (u.role === 'admin' ? 'tag-admin' : 'tag-user') + '">' + u.role + '</span></td>';
+      html += '<td><span class="status-badge ' + (u.active ? 'status-done' : 'status-failed') + '">' + (u.active ? 'active' : 'disabled') + '</span></td>';
+      html += '<td><div class="flex gap-2">';
+      html += '<button class="btn btn-ghost btn-sm" data-toggle-user="' + esc(u.username) + '" data-toggle-active="' + (!u.active) + '">' + (u.active ? 'Disable' : 'Enable') + '</button>';
+      if (u.username !== currentUser.username) html += '<button class="btn btn-danger btn-sm" data-del-user="' + esc(u.username) + '">Delete</button>';
+      html += '</div></td></tr>';
+    });
+    html += '</tbody></table>';
+    el.innerHTML = html;
+  } catch(e) { el.innerHTML = '<p class="text-muted text-sm">' + esc(e.message) + '</p>'; }
+}
+
+async function saveUser() {
+  const err = document.getElementById('mu-error');
+  err.classList.remove('show');
+  const body = {
+    username: document.getElementById('mu-username').value.trim(),
+    name: document.getElementById('mu-name').value.trim(),
+    password: document.getElementById('mu-password').value,
+    role: document.getElementById('mu-role').value
+  };
+  try {
+    await api('/api/users', 'POST', body);
+    document.getElementById('modal-user').classList.remove('open');
+    toast('✓ User created', 'success');
+    loadUsers();
+  } catch(e) { err.textContent = e.message; err.classList.add('show'); }
+}
+
+async function loadLogs() {
+  const el = document.getElementById('logs-content');
+  el.textContent = 'Loading…';
+  try {
+    const data = await api('/api/logs');
+    if (!data.logs.length) { el.textContent = 'No logs yet.'; return; }
+    el.innerHTML = data.logs.map(function(l) {
+      const t = l.timestamp ? '<span style="color:var(--muted)">[' + l.timestamp + ']</span> ' : '';
+      const lvl = l.level === 'error' ? '<span style="color:var(--danger)">[ERROR]</span> ' : '';
+      return '<div>' + t + lvl + esc(l.message || JSON.stringify(l)) + '</div>';
+    }).join('');
+  } catch(e) { el.textContent = e.message; }
+}
+
+// ── Helpers ──
+function formatSize(b) {
+  if (b < 1024) return b + ' B';
+  if (b < 1048576) return (b/1024).toFixed(1) + ' KB';
+  return (b/1048576).toFixed(1) + ' MB';
+}
+function fileIcon(name) {
+  const ext = name.split('.').pop().toLowerCase();
+  return { pdf: '📕', doc: '📝', docx: '📝', png: '🖼️', jpg: '🖼️', jpeg: '🖼️', txt: '📄' }[ext] || '📄';
+}
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Event Listeners (NO inline onclick) ──
+document.getElementById('login-btn').addEventListener('click', doLogin);
+document.getElementById('login-user').addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
+document.getElementById('login-pass').addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
+document.getElementById('logout-btn').addEventListener('click', doLogout);
+document.getElementById('clear-file-btn').addEventListener('click', clearFile);
+document.getElementById('submit-btn').addEventListener('click', submitJob);
+document.getElementById('refresh-queue-btn').addEventListener('click', loadQueue);
+document.getElementById('refresh-logs-btn').addEventListener('click', loadLogs);
+document.getElementById('add-user-btn').addEventListener('click', function() {
+  document.getElementById('mu-username').value = '';
+  document.getElementById('mu-name').value = '';
+  document.getElementById('mu-password').value = '';
+  document.getElementById('mu-role').value = 'user';
+  document.getElementById('mu-error').classList.remove('show');
+  document.getElementById('modal-user').classList.add('open');
+});
+document.getElementById('modal-cancel-btn').addEventListener('click', function() {
+  document.getElementById('modal-user').classList.remove('open');
+});
+document.getElementById('modal-save-btn').addEventListener('click', saveUser);
+document.getElementById('mobile-menu-btn').addEventListener('click', function() {
+  document.getElementById('sidebar').classList.toggle('open');
+});
+
+document.querySelectorAll('.nav-item[data-page]').forEach(function(item) {
+  item.addEventListener('click', function() { showPage(this.dataset.page); });
+});
+
+document.getElementById('file-input').addEventListener('change', function() {
+  if (this.files[0]) onFileSelected(this.files[0]);
+});
+
+const zone = document.getElementById('upload-zone');
+zone.addEventListener('dragover', function(e) { e.preventDefault(); zone.classList.add('dragover'); });
+zone.addEventListener('dragleave', function() { zone.classList.remove('dragover'); });
+zone.addEventListener('drop', function(e) {
+  e.preventDefault(); zone.classList.remove('dragover');
+  if (e.dataTransfer.files[0]) onFileSelected(e.dataTransfer.files[0]);
+});
+
+// Delegate clicks for dynamic table buttons
+document.addEventListener('click', function(e) {
+  const printId = e.target.dataset.printId;
+  const deleteId = e.target.dataset.deleteId;
+  const toggleUser = e.target.dataset.toggleUser;
+  const delUser = e.target.dataset.delUser;
+
+  if (printId) printJob(printId);
+  if (deleteId) deleteJob(deleteId);
+  if (toggleUser !== undefined) {
+    const active = e.target.dataset.toggleActive === 'true';
+    api('/api/users/' + toggleUser, 'PUT', { active: active })
+      .then(function() { toast('User updated', 'success'); loadUsers(); })
+      .catch(function(err) { toast(err.message, 'error'); });
+  }
+  if (delUser) {
+    if (confirm('Delete user "' + delUser + '"?')) {
+      api('/api/users/' + delUser, 'DELETE')
+        .then(function() { toast('User deleted', 'success'); loadUsers(); })
+        .catch(function(err) { toast(err.message, 'error'); });
+    }
+  }
+});
+
+// Init
+checkSession();
+</script>
+</body>
+</html>

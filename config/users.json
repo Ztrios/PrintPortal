@@ -1,0 +1,9 @@
+{
+  "admin": {
+    "name": "Administrator",
+    "role": "admin",
+    "active": true,
+    "passwordHash": "$2b$12$BDEy9NHjRIkhsXu/u8zV1eCi01wIfSWbpjTORdeMeb8w/ZwUw3LSu",
+    "createdAt": "2026-03-15T14:28:44.000Z"
+  }
+}
