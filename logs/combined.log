@@ -1,7 +1,7 @@
-{"level":"info","message":"PrintPortal running on http://0.0.0.0:3000","timestamp":"2026-03-15T08:30:24.609Z"}
+{"level":"info","message":"PrintPortal running on http://0.0.0.0:5000","timestamp":"2026-03-15T08:30:24.609Z"}
 {"level":"info","message":"Login: admin from 127.0.0.1","timestamp":"2026-03-15T08:33:12.403Z"}
 {"level":"info","message":"Job created: 88977b8e-1381-4510-bbef-bd3d08f82d69 by admin file=H_37770109.pdf","timestamp":"2026-03-15T08:38:20.865Z"}
 {"level":"info","message":"Printing job 88977b8e-1381-4510-bbef-bd3d08f82d69","timestamp":"2026-03-15T08:38:33.234Z"}
 {"level":"error","message":"Print error job 88977b8e-1381-4510-bbef-bd3d08f82d69: Command failed: powershell -Command \"Start-Process -FilePath '/Users/angelinashoily/Downloads/printportal2/uploads/7fd018d1-8d29-4c9e-8c94-bbc8846f8543.pdf' -Verb Print -Wait\"\n/bin/sh: powershell: command not found\n","timestamp":"2026-03-15T08:38:33.270Z"}
 {"level":"info","message":"Job created: 73e5fe81-f7bf-4177-a8d1-295e7103172e by admin file=account heads.pdf","timestamp":"2026-03-15T08:41:33.662Z"}
-{"level":"info","message":"PrintPortal running on http://0.0.0.0:3000","timestamp":"2026-03-15T08:42:57.319Z"}
+{"level":"info","message":"PrintPortal running on http://0.0.0.0:5000","timestamp":"2026-03-15T08:42:57.319Z"}

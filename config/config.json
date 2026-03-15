@@ -1,5 +1,5 @@
 {
-  "port": 3000,
+  "port": 5000,
   "printerName": "",
   "sessionSecret": "CHANGE_THIS_TO_A_LONG_RANDOM_STRING_AT_LEAST_64_CHARS",
   "sessionTTL": 3600,

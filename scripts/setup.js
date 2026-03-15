@@ -41,8 +41,8 @@ async function main() {
   const printerName = await ask('Enter printer name (leave blank to auto-detect, or set later in config.json): ');
   if (printerName.trim()) config.printerName = printerName.trim();
 
-  const portInput = await ask('Port to run server on [3000]: ');
-  config.port = parseInt(portInput) || 3000;
+  const portInput = await ask('Port to run server on [5000]: ');
+  config.port = parseInt(portInput) || 5000;
 
   fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2));
   console.log('\n✔ Config saved\n');

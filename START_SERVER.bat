@@ -17,8 +17,8 @@ set LOCAL_IP=%LOCAL_IP: =%
 
 echo  Server starting...
 echo  ─────────────────────────────────────────
-echo  Local:    http://localhost:3000
-echo  Network:  http://%LOCAL_IP%:3000
+echo  Local:    http://localhost:5000
+echo  Network:  http://%LOCAL_IP%:5000
 echo  ─────────────────────────────────────────
 echo  Share the Network URL with your colleagues
 echo  Press Ctrl+C to stop the server

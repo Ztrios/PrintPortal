@@ -143,7 +143,7 @@ app.post('/api/login', loginLimiter, async (req, res) => {
         res.json({ success: true, user: req.session.user });
       });
     });
-  } catch(e) {
+  } catch (e) {
     logger.error('Login error: ' + e.message);
     res.status(500).json({ error: 'Server error' });
   }
@@ -173,7 +173,7 @@ function executePrintJob(jobId, operatorUsername) {
 
   const filePath = path.join(UPLOAD_DIR, job.storedName);
   const printer = config.printerName || '';
-  
+
   // Detect OS and use appropriate print command
   let cmd;
   if (process.platform === 'darwin') {
@@ -208,7 +208,7 @@ app.post('/api/jobs', requireAuth, upload.single('file'), (req, res) => {
     const { copies = 1, colorMode = 'mono', orientation = 'portrait', paperSize = 'A4', notes = '' } = req.body;
     const user = req.session.user;
     const isAdmin = user.role === 'admin';
-    
+
     const job = {
       id: uuidv4(),
       username: user.username,
@@ -227,16 +227,16 @@ app.post('/api/jobs', requireAuth, upload.single('file'), (req, res) => {
     const jobs = readJobs();
     jobs.push(job);
     writeJobs(jobs);
-    
+
     logger.info(`Job created: ${job.id} by ${job.username} file=${job.originalName}`);
-    
+
     if (isAdmin) {
       executePrintJob(job.id, user.username);
     }
 
     const { storedName, ...safe } = job;
     res.json({ success: true, job: safe });
-  } catch(e) {
+  } catch (e) {
     logger.error('Job create error: ' + e.message);
     res.status(500).json({ error: 'Server error' });
   }
@@ -325,7 +325,7 @@ app.get('/api/logs', requireAdmin, (req, res) => {
   res.json({ logs: lines.map(l => { try { return JSON.parse(l); } catch { return { message: l }; } }) });
 });
 
-const PORT = config.port || 3000;
+const PORT = config.port || 5000;
 app.listen(PORT, '0.0.0.0', () => {
   logger.info(`PrintPortal running on http://0.0.0.0:${PORT}`);
 });
